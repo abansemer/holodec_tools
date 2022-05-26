@@ -1,4 +1,4 @@
-function out=holoDiagnostics(seqdir, ncfile)
+function out=holoDiagnostics_spicule(seqdir, ncfile)
     %Given a directory of seq files, save a file with some diagnostic
     %information about image times, brightness, etc.
 

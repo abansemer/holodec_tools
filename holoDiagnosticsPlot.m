@@ -13,7 +13,11 @@ function holoDiagnosticsPlot(fn, fn_reference)
         load(fn);
         ref = data;
     end
-
+    
+    %Compatibility check, field names vary for holoDiagnostics versions
+    if ~isfield('data','firstimagetime'); data.firstimagetime=data.fullimagetime; end
+    if ~isfield('data','flightnumber'); data.flightnumber=data.prefix; end
+    
     %Clean up time variables
     time1 = (mod(data.imagetime(1),1) + (data.imagetime-data.imagetime(1)))* 86400;  %Time at each image within seq files
     time2 = (mod(data.firstimagetime(1),1) + (data.firstimagetime-data.firstimagetime(1)))* 86400;   %Time of each seq file
@@ -34,7 +38,10 @@ function holoDiagnosticsPlot(fn, fn_reference)
     disp("Bright frames: " + nbright + "/" + ntotal);
     disp("Dark frames: " + ndark + "/" + ntotal);
 
-    %Plot background differences (if available)
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Plot background differences (if available)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if nargin == 2
         diff = data.meanbackground - ref.meanbackground;
         figure('Name','Background Difference')
@@ -49,7 +56,10 @@ function holoDiagnosticsPlot(fn, fn_reference)
     title([data.flightnumber ' ' data.date ' Background']);
     saveas(gcf, data.date+"_background.png");
 
-    %Plot overall brightness histogram
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Plot overall brightness histogram
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     figure('Name','Brightness Histogram')
     colormap default
     good = find(data.fullsizebrightness > 50);
@@ -68,29 +78,38 @@ function holoDiagnosticsPlot(fn, fn_reference)
     legend
     saveas(gcf, data.date+"_histogram.png");
 
-    %Image histogram contours
-    figure('Name','Brightness Histogram Time Series')
-    levels = linspace(0, max(data.imagehist(:,100)), 15);
-    contourf(time2, data.histogram_edges(5:end-5), data.imagehist(:,5:end-4)', levels, 'LineStyle', 'none');
-    %xlim(timerange)
-    xlabel('Time (s)')
-    ylabel('Brightness');
-    c=colorbar;
-    c.Label.String = 'Counts';
-    hold on
-    plot(time2, data.fullsizebrightness, 'r', 'Linewidth', 2);
-    for i=1:length(outages)
-        ff=fill([outagestart(i) outagestart(i) outagestop(i) outagestop(i)], [5 250 250 5], 'k', 'LineStyle','none');
-        hold off
-        alpha(ff, 0.5);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Plot color-contoured histograms
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+    if size(data.imagehist, 1) > 10  %Make sure enough histograms for plot
+        %Image histogram contours
+        figure('Name','Brightness Histogram Time Series')
+        levels = linspace(0, max(data.imagehist(:,100)), 15);
+        contourf(time2, data.histogram_edges(5:end-5), data.imagehist(:,5:end-4)', levels, 'LineStyle', 'none');
+        %xlim(timerange)
+        xlabel('Time (s)')
+        ylabel('Brightness');
+        c=colorbar;
+        c.Label.String = 'Counts';
         hold on
+        plot(time2, data.fullsizebrightness, 'r', 'Linewidth', 2);
+        for i=1:length(outages)
+            ff=fill([outagestart(i) outagestart(i) outagestop(i) outagestop(i)], [5 250 250 5], 'k', 'LineStyle','none');
+            hold off
+            alpha(ff, 0.5);
+            hold on
+        end
+
+        hold off
+        title([data.flightnumber ' ' data.date]);
+        saveas(gcf, data.date+"_histogramcontour.png");
     end
-
-    hold off
-    title([data.flightnumber ' ' data.date]);
-    saveas(gcf, data.date+"_histogramcontour.png");
-
-    %Brightness plot (center patch and full image), with aircraft data
+    
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Brightness plot (center patch and full image), with aircraft data
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     figure('Name','Brightness Time Series')
     if isfield(data,'cdplwc')
         tiledlayout(5,1)  % Newer files have CDP
@@ -114,44 +133,49 @@ function holoDiagnosticsPlot(fn, fn_reference)
     xlabel('Time (s)')
     ylabel('Brightness')
 
-
-    ax2 = nexttile;
-    plot(data.nctime, data.w)
-    ylim([-10 10])
-    xlabel('Time (s)')
-    ylabel('W (m/s)')
-
-    ax3 = nexttile;
-    plot(data.nctime, data.t)
-    xlabel('Time (s)')
-    ylabel('T (degC)')
-
-    if isfield(data,'cdplwc')
-        ax4 = nexttile;
-        plot(data.nctime, data.cdplwc)
+    if isfield('data','ncfile')  %Skip if no netCDF data
+        ax2 = nexttile;
+        plot(data.nctime, data.w)
+        ylim([-10 10])
         xlabel('Time (s)')
-        ylabel('CDP LWC (g/m3)')
-        linkaxes([ax1, ax2, ax3, ax4],'x');
-    else
-        linkaxes([ax1, ax2, ax3],'x');
+        ylabel('W (m/s)')
+
+        ax3 = nexttile;
+        plot(data.nctime, data.t)
+        xlabel('Time (s)')
+        ylabel('T (degC)')
+
+        if isfield(data,'cdplwc')
+            ax4 = nexttile;
+            plot(data.nctime, data.cdplwc)
+            xlabel('Time (s)')
+            ylabel('CDP LWC (g/m3)')
+            linkaxes([ax1, ax2, ax3, ax4],'x');
+        else
+            linkaxes([ax1, ax2, ax3],'x');
+        end
     end
     saveas(gcf, data.date+"_brightness.png");
 
-    %Simple flight data plot, change as needed
-    figure('Name','Flight Data')
-    tiledlayout(2,1)
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Simple flight data plot, change as needed
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isfield('data','ncfile')  %Skip if no netCDF data
+        figure('Name','Flight Data')
+        tiledlayout(2,1)
 
-    ax1 = nexttile;
-    plot(data.nctime, data.w)
-    title([data.flightnumber ' ' data.date]);
-    xlabel('Time (s)')
-    ylabel('W (m/s)')
+        ax1 = nexttile;
+        plot(data.nctime, data.w)
+        title([data.flightnumber ' ' data.date]);
+        xlabel('Time (s)')
+        ylabel('W (m/s)')
 
-    ax2 = nexttile;
-    plot(data.nctime, data.t)
-    xlabel('Time (s)')
-    ylabel('T (degC)')
+        ax2 = nexttile;
+        plot(data.nctime, data.t)
+        xlabel('Time (s)')
+        ylabel('T (degC)')
 
-    linkaxes([ax1,ax2],'x');
-
+        linkaxes([ax1,ax2],'x');
+    end
 end
