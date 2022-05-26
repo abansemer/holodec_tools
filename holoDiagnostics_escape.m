@@ -1,10 +1,12 @@
 function fnout=holoDiagnostics_escape(imagedir, ncfile)
-    %Given a directory of png files, save a file with diagnostic
+    %Given a directory of holograms, save a file with diagnostic
     %information about image times, brightness, etc.  Use
     %holoDiagnosticsPlot.m to create figures from this file.
-    
-    %This version is for Holodec data in 2022 which records .png files 
+    %This version is for Holodec data in 2022 which records .tiff files 
     %instead of .seq files.
+    
+    %Input argument ncfile (optional) will read/merge aircraft data.
+    
 
     %Add trailing slash to directory and get filenames 
     if imagedir(end) ~= filesep; imagedir = [imagedir filesep]; end
@@ -59,9 +61,9 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
     data.date = datestr(imagetime, 'yyyy-mm-dd-HH-MM-SS');
     data.prefix = prefix{1};
 
-    %Get data for each png file and add to struct
+    %Get data for each tiff file and add to struct
     ngood = 0;  %Keep track of number of good (bright) full holograms
-    c = 1;      %Keep track of number of all png files in time range
+    c = 1;      %Keep track of number of all tiff files in time range
     cfull = 1;  %Index of full-size images read in
     for i = 1:length(imagefiles)
         [imagetime, prefix] = holoNameParse(imagefiles(i).name);
@@ -83,7 +85,7 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
             end
 
             %Read in a small portion of every hologram
-            patchImage = imread(imagefiles(i).name,'PixelRegion',{[1,3000],[2000,2002]});       
+            patchImage = imread(imagefiles(i).name,'PixelRegion',{[1,3000],[2000,2000]});       
             data.imagetime = [data.imagetime imagetime];
             data.brightness = [data.brightness mean(patchImage, 'all')];
             c = c + 1;
