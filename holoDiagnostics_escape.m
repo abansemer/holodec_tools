@@ -8,7 +8,10 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
 
     %Add trailing slash to directory and get filenames 
     if imagedir(end) ~= filesep; imagedir = [imagedir filesep]; end
-    imagefiles=dir([imagedir '*.tiff']);
+    imagefiles=dir([imagedir '*.tiff']);     %If all images are in main flight directory
+    if length(imagefiles)==0       %If all are in subdirectories by hour and minute
+        imagefiles=dir([imagedir '**/*.tiff']);
+    end
     nholograms=length(imagefiles);
     fullsizeinterval = min([100, nholograms]);   %Read a full size hologram at this interval
     nfullholograms=floor(nholograms/fullsizeinterval);
@@ -53,7 +56,7 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
     data.histogram_edges = 0:1:255;
     
     %Read first image to get basic info
-    fullImage = imread(imagefiles(1).name);
+    fullImage = imread([imagefiles(1).folder filesep imagefiles(1).name]);
     meanbackground = zeros(size(fullImage));
     [imagetime, prefix] = holoNameParse(imagefiles(1).name);
     data.date = datestr(imagetime, 'yyyy-mm-dd-HH-MM-SS');
@@ -69,7 +72,7 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
        
             %Read in the entire hologram every fullsizeinterval (~100) images
             if mod(c, fullsizeinterval) == 0
-                fullImage = imread(imagefiles(i).name);
+                fullImage = imread([imagefiles(i).folder filesep imagefiles(i).name]);
                 data.fullimagetime(cfull) = imagetime;
                 data.fullsizebrightness(cfull) = mean(fullImage, 'all');
                 fullHistogram = histcounts(fullImage, data.histogram_edges);
@@ -83,12 +86,12 @@ function fnout=holoDiagnostics_escape(imagedir, ncfile)
             end
 
             %Read in a small portion of every hologram
-            fid = fopen(imagefiles(i).name, 'r');
+            fid = fopen([imagefiles(i).folder filesep imagefiles(i).name], 'r');
             fseek(fid,5000000,'bof');
             patchImage = fread(fid,3000,'uint8=>uint8');
             fclose(fid);
 
-            %2x slower: patchImage = imread(imagefiles(i).name,'PixelRegion',{[2000,2000],[2000,3000]});       
+            %2x slower: patchImage = imread([imagefiles(i).folder filesep imagefiles(i).name],'PixelRegion',{[2000,2000],[2000,3000]});       
             data.imagetime = [data.imagetime imagetime];
             data.brightness = [data.brightness mean(patchImage, 'all')];
             c = c + 1;
