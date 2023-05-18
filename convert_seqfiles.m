@@ -31,7 +31,7 @@ function out=convert_seqfiles(options)
     
     %Get seq files
     rawfiles=dir([options.seqdir '*.seq']);
-    if options.seqfile ~= ''; rawfiles=dir(options.seqfile); end;
+    if ~isempty(options.seqfile); rawfiles=dir(options.seqfile); end;
         
     %Check for errors
     nholograms=length(rawfiles);
@@ -69,7 +69,7 @@ function out=convert_seqfiles(options)
     out.framenum=framenum;
     out.seqfilenum=seqfilenum;
     out.imagetime=imagetime;
-    cout.rawfiles=rawfiles;
+    out.rawfiles=rawfiles;
 end
     
 
