@@ -41,6 +41,7 @@ function [seqInfo, firstIm] = indexSequenceFile(thisSequenceFilePath)
    fseek(fid, 616, 'bof');
    seqInfo.extendedHeader = fread(fid, 1, 'int32');
 
+   % Seq timestamps start on 01/01/1970
    time_t_roottime = datenum([1970 1 1 0 0 0]);
 
    shouldBeNumImages = round((fileSize - fileHeaderLength)/(seqInfo.imageSpacing));
@@ -61,7 +62,7 @@ function [seqInfo, firstIm] = indexSequenceFile(thisSequenceFilePath)
        rawImTime(2) = fread(fid,1,'uint16=>double');
        rawImTime(3) = fread(fid,1,'uint16=>double');
        rawImTime = rawImTime(1) + rawImTime(2)/1000 + rawImTime(3)/1e6;
-       imTime = datenum( rawImTime/86400 + time_t_roottime);
+       imTime = datenum(rawImTime/86400 + time_t_roottime);
        seqInfo.time(cnt2) = imTime;  %Contains time and date, use datestr to convert
        seqInfo.imagepointer(cnt2)=offset;
 
