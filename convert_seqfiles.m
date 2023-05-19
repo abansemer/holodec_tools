@@ -1,22 +1,21 @@
 function out=convert_seqfiles(options)
-    % Extract PNG files from a directory containing one or more seq files.
-    % For HOLODEC data collected in years 2010-2021.
+    % CONVERT_SEQFILES Extract PNG files from a directory containing one or
+    % more seq files. For HOLODEC data collected in years 2010-2021.
     %
-    % seqdir: directory containing Holodec *.seq files
-    % seqfile: use to specify a single .seq file instead of a directory
-    % outdir: directory to save the Holodec png output
-    % prefix: optional prefix for extracted .png files
+    % Options:
+    % 'seqdir': directory containing Holodec *.seq files
+    % 'seqfile': use to specify a single .seq file instead of a directory
+    % 'outdir': directory to save the .png files
+    % 'prefix': optional prefix for extracted .png files
     %
-    % Example 1, default options extract all files in current directory:
-    % x=convert_seqfiles();
+    % Examples:
+    % x = convert_seqfiles();
+    %       Default options extract all files in current directory.
     %
-    % Example 2, specify in/out directories and prefix:
-    % x=convert_seqfiles('seqdir', './holodec/RF04',...
-    %   'outdir', '.', 'prefix', 'RF04')
+    % x = convert_seqfiles('seqdir', './RF04', 'outdir', '.', 'prefix', 'RF04');
+    %       Specify in/out directories and prefix.
     %
-    %
-    % See also holoprep.m for converting selected files based on supporting
-    % data.
+    % See also holoprep.m.
 
     arguments
        options.seqdir char = '.'

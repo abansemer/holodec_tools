@@ -50,10 +50,6 @@ function [seqInfo, firstIm] = indexSequenceFile(thisSequenceFilePath)
    end
    numImages = shouldBeNumImages;
 
-   seqInfo.time=zeros(numImages,1);
-   seqInfo.date=zeros(numImages,1);
-   seqInfo.brightness=zeros(numImages,1);
-   seqInfo.imagepointer=zeros(numImages,1);
    for cnt2 = 1:numImages
        frameNum = cnt2;
        offset = fileHeaderLength + (cnt2-1)*seqInfo.imageSpacing;
@@ -64,6 +60,7 @@ function [seqInfo, firstIm] = indexSequenceFile(thisSequenceFilePath)
        rawImTime = rawImTime(1) + rawImTime(2)/1000 + rawImTime(3)/1e6;
        imTime = datenum(rawImTime/86400 + time_t_roottime);
        seqInfo.time(cnt2) = imTime;  %Contains time and date, use datestr to convert
+       seqInfo.datetime(cnt2) = datetime(rawImTime, 'ConvertFrom', 'posixtime');  %Newer format
        seqInfo.imagepointer(cnt2)=offset;
 
        %Read 10kB near the middle of the image to get an overall brightness

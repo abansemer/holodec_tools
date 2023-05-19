@@ -40,7 +40,10 @@ function data=read_ncar_aircraft(ncfile, refvar)
     
     %Filter where airspeed > 50m/s to avoid long periods on ground
     inflight = find(tas > 50);
-    fulltime = datenum(data.flightdate,'mm/dd/yyyy') + double(nctime)./86400;
+    %fulltime = datenum(data.flightdate,'mm/dd/yyyy') + double(nctime)./86400;
+    %Time in datetime format, need to get the 'epoch' (start date) first
+    epochtime = datetime(data.flightdate, 'InputFormat','MM/dd/yyyy');
+    fulltime = datetime(nctime, 'ConvertFrom', 'epochtime', 'Epoch', epochtime);
     data.timerange = [min(fulltime(inflight)), max(fulltime(inflight))];
     
     %Add aircraft data to the structure
