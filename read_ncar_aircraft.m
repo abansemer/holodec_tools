@@ -19,6 +19,8 @@ function data=read_ncar_aircraft(ncfile, refvar)
     %% Get supporting data in netCDF file
     data.flightnumber = upper(ncreadatt(ncfile, '/', 'FlightNumber'));
     data.flightdate = ncreadatt(ncfile, '/', 'FlightDate');
+    data.project = ncreadatt(ncfile, '/', 'ProjectName');
+    data.aircraftname = ncreadatt(ncfile, '/', 'Platform');
     data.ncfile = ncfile;
     nctime = ncread(ncfile,'Time');
     tas = ncread(ncfile,'TASX');
@@ -31,10 +33,18 @@ function data=read_ncar_aircraft(ncfile, refvar)
     %Find CDP LWC (PLWCD_XXXX)
     finfo = ncinfo(ncfile);
     cdplwc = [];
+    cdplwc2 = [];   %Some projects have two CDPs on board
+    numcdps = 0;
     for i = 1:length(finfo.Variables)
         if (length(finfo.Variables(i).Name) >= 6)...
                 && (finfo.Variables(i).Name(1:6) == "PLWCD_")
-            cdplwc = ncread(ncfile, finfo.Variables(i).Name);
+            if numcdps == 0
+                cdplwc = ncread(ncfile, finfo.Variables(i).Name);
+            end
+            if numcdps == 1
+                cdplwc2 = ncread(ncfile, finfo.Variables(i).Name);
+            end
+            numcdps = numcdps + 1;
         end
     end
     
@@ -63,7 +73,15 @@ function data=read_ncar_aircraft(ncfile, refvar)
     else   %No CDPLWC available
         aircraft.cdplwc = cdplwc;
     end
-    
+
+    %Get CDP #2 data
+    if length(cdplwc2) == length(nctime)   %Have data
+        aircraft.cdplwc2 = cdplwc2(data.ncrange);
+    else   %No CDPLWC available
+        aircraft.cdplwc2 = cdplwc2;
+    end
+
+
     %Get reference data for holoprep (usually CDP)
     gotrefdata = false;
     for i = 1:length(finfo.Variables)

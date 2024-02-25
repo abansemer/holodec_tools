@@ -14,6 +14,8 @@ function data=read_convair(ncfile)
     %Add basic flight info to data structure
     data.flightnumber = upper(ncreadatt(ncfile, '/', 'FlightNumber'));
     data.flightdate = ncreadatt(ncfile, '/', 'FlightDate');
+    data.project = ncreadatt(ncfile, '/', 'Project');
+    data.aircraftname = ncreadatt(ncfile, '/', 'Aircraft');
     data.ncfile = ncfile;
 
     %Read in key variables

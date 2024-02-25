@@ -9,7 +9,7 @@ function data = holoprep(options)
     %
     % Options:
     % 'rawdir': directory containing Holodec *.seq or *.tiff files
-    % 'outdir': directory to save the output, defaults to /glade/scratch/user/holoprep_[flightid]
+    % 'outdir': directory to save the output, defaults to /glade/derecho/scratch/user/holoprep_[flightid]
     % 'ncfile': netCDF file containing CDP or other variable to detect cloud
     % 'refvar': netCDF tag for the variable to use as reference
     % 'thresh': lower threshold to apply on refvar (maybe change to a range?)
@@ -69,7 +69,7 @@ function data = holoprep(options)
 
     % Make default output directory name
     if ~isdir(options.outdir)
-        options.outdir = ['/glade/scratch/' getenv('USER') '/holoprep_' options.flightid];
+        options.outdir = ['/glade/derecho/scratch/' getenv('USER') '/holoprep_' options.flightid];
     end
 
     % Make output directory
@@ -236,7 +236,7 @@ function data = holoprep(options)
     % %% Properties %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % path = /glade/work/bansemer/escape/rf06_cloudpass
     % current_holo =  RF06_2022-06-09-21-23-52-081985.png
-    % localTmp = /glade/scratch/bansemer/tmp
+    % localTmp = /glade/derecho/scratch/bansemer/tmp
     % workers = 1
     % hologram_filter = \.png
 
@@ -263,7 +263,7 @@ function data = holoprep(options)
     % Write properties
     fprintf(fileID, 'path = %s\n', options.outdir);
     fprintf(fileID, 'current_holo = %s\n', fn(1));
-    localTmp = sprintf('/glade/scratch/%s/reconstructions_%s', getenv('USER'), options.flightid);
+    localTmp = sprintf('/glade/derecho/scratch/%s/reconstructions_%s', getenv('USER'), options.flightid);
     if ~exist(localTmp); status = mkdir(localTmp); end;    %Make directory if it doesn't exist
     fprintf(fileID, 'localTmp = %s\n', localTmp);
     fprintf(fileID, 'workers = 1\n');
