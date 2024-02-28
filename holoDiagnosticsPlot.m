@@ -60,7 +60,7 @@ function holoDiagnosticsPlot(fn, fn_reference)
         figure('Name','Mean Background')
         colormap gray
         imagesc(data.meanbackground);
-        title([data.flightnumber ' ' data.date ' Background']);
+        title([data.prefix ' ' data.date ' Background']);
         saveas(gcf, data.date+"_background.png");
 
 
@@ -70,7 +70,7 @@ function holoDiagnosticsPlot(fn, fn_reference)
         colormap default
         good = find(data.fullsizebrightness > 50);
         plot(data.histogram_edges(1:end-1), mean(data.imagehist(good,:),1), 'DisplayName', 'Flight');
-        title([data.flightnumber ' ' data.date]);
+        title([data.prefix ' ' data.date]);
         xlabel('Brightness')
         ylabel('Histogram (mean counts)')
         xlim([5 250])
@@ -103,7 +103,7 @@ function holoDiagnosticsPlot(fn, fn_reference)
             hold on
             plot(datenum(data.fullimagetime), data.fullsizebrightness, 'r', 'Linewidth', 2);
             hold off
-            title([data.flightnumber ' ' data.date]);
+            title([data.prefix ' ' data.date]);
             saveas(gcf, data.date+"_histogramcontour.png");
         end
 
@@ -129,7 +129,7 @@ function holoDiagnosticsPlot(fn, fn_reference)
         end
         hold off
         
-        title([data.flightnumber ' ' data.date]);
+        title([data.prefix ' ' data.date]);
         xlabel('Time (s)')
         ylabel('Brightness')
 

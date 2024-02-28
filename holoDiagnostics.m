@@ -46,6 +46,42 @@ function fnout=holoDiagnostics(imagedir, options)
         end
     end
     
+    %% Get image filenames
+    if ~isfolder(imagedir); disp("Image directory not found: "+imagedir); return; end
+    %Add trailing slash if necessary
+    if imagedir(end) ~= filesep; imagedir = [imagedir filesep]; end
+    
+    %Find all matching images in main directory
+    imagefiles=dir([imagedir options.flightid '*.tiff']);
+    
+    %If no images, search in subdirectories by hour and minute
+    if length(imagefiles)==0
+        imagefiles=dir([imagedir '**/' options.flightid '*.tiff']);
+    end
+    nholograms=length(imagefiles);
+    if nholograms == 0
+        disp(['No holograms found with id: ' options.flightid]);
+        return
+    end
+    fullsizeinterval = min([100, nholograms]);   %Read a full size hologram at this interval
+    nfullholograms=floor(nholograms/fullsizeinterval);
+
+    %% If the timerange isn't already available from other source, get from holograms
+    if ~exist('data', 'var')
+        [imagetime, prefix] = holoNameParse(imagefiles(1).name);
+        data.timerange = [imagetime, imagetime];  %Initialize with first hologram
+        for i = 1:length(imagefiles)
+            [imagetime, prefix] = holoNameParse(imagefiles(i).name);
+            if imagetime < data.timerange(1)
+                data.timerange(1) = imagetime;
+            end
+            if imagetime > data.timerange(2)
+                data.timerange(2) = imagetime;
+            end
+        end
+    end
+    data.timerange
+
     %% Get supporting data from Holodec housekeeping files (txt format):
     % Provided by Robert Stillwell 6/2022
     if isfolder(options.housedir)
@@ -120,25 +156,6 @@ function fnout=holoDiagnostics(imagedir, options)
         end
     end
  
-    %% Get image filenames
-    if ~isfolder(imagedir); disp("Image directory not found: "+imagedir); return; end
-    %Add trailing slash if necessary
-    if imagedir(end) ~= filesep; imagedir = [imagedir filesep]; end
-    
-    %Find all matching images in main directory
-    imagefiles=dir([imagedir options.flightid '*.tiff']);
-    
-    %If no images, search in subdirectories by hour and minute
-    if length(imagefiles)==0
-        imagefiles=dir([imagedir '**/' options.flightid '*.tiff']);
-    end
-    nholograms=length(imagefiles);
-    if nholograms == 0
-        disp(['No holograms found with id: ' options.flightid]);
-        return
-    end
-    fullsizeinterval = min([100, nholograms]);   %Read a full size hologram at this interval
-    nfullholograms=floor(nholograms/fullsizeinterval);
 
     %% Initialize Holodec variables
     data.imagetime = datetime([],[],[]);
