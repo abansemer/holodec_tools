@@ -47,7 +47,13 @@ function fnout=holoDiagnostics(imagedir, options)
     end
     
     %% Get image filenames
-    if ~isfolder(imagedir); disp("Image directory not found: "+imagedir); return; end
+    if ~isfolder(imagedir) 
+        disp("Image directory not found: "+imagedir);
+        disp("Enter with dialog...")
+        [~, imagedir] = uigetfile('','Select hologram directory');
+        imagedir
+        return 
+    end
     %Add trailing slash if necessary
     if imagedir(end) ~= filesep; imagedir = [imagedir filesep]; end
     
@@ -80,7 +86,8 @@ function fnout=holoDiagnostics(imagedir, options)
             end
         end
     end
-    data.timerange
+    disp(['Start time: '+string(data.timerange(1))]);
+    disp(['Stop time:  '+string(data.timerange(2))])
 
     %% Get supporting data from Holodec housekeeping files (txt format):
     % Provided by Robert Stillwell 6/2022
@@ -168,7 +175,8 @@ function fnout=holoDiagnostics(imagedir, options)
     data.histogram_edges = 0:1:255;
     data.filename =[];
     fpref = zeros(10, 15);  %Reference fingerprint, will be updated at first valid background
-    
+    lastpercentcomplete = 0;
+
     %% Read first image to get basic info
     fullImage = imread([imagefiles(1).folder filesep imagefiles(1).name]);
     meanbackground = zeros(size(fullImage));
@@ -223,10 +231,12 @@ function fnout=holoDiagnostics(imagedir, options)
             c = c + 1;
         end
         
-        %Show progress
-        if mod(i,50) == 0
-            fprintf(repmat('\b',1,20));    %Backup
-            fprintf('%d / %d ',[i,length(imagefiles)]);
+        %Show progress every 10%
+        percentcomplete = i/length(imagefiles)*100;
+        if floor(percentcomplete/10) ~= floor(lastpercentcomplete/10)
+            %fprintf(repmat('\b',1,20));    %Backup
+            fprintf('%d / %d   %4.1f%% \n',[i,length(imagefiles),percentcomplete]);
+            lastpercentcomplete = percentcomplete;
         end
     end
 
