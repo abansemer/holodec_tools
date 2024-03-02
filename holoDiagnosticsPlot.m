@@ -169,8 +169,17 @@ function holoDiagnosticsPlot(fn, fn_reference)
             xlabel('Time (s)'); ylabel('Temperature [\circC]')
             linkaxes([ax1, ax2],'x');
         end
-            
         saveas(gcf, data.date+"_brightness.png");
+
+        %% Image rate plot
+        figure('Name', 'Hologram Imaging Rate')
+        dtime = data.imagetime(2:end)-data.imagetime(1:end-1);
+        plot(data.imagetime(1:end-1), seconds(dtime), '.');
+        xlabel('Time')
+        ylabel('Time Difference (s)')
+        ylim([0, 2])
+        grid on
+        saveas(gcf, data.date+"_hologramrate.png");
 
     end %main plots, supplementary plots below
     

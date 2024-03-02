@@ -1,4 +1,4 @@
-%% Script to run post-flight Holodec diagnostic routines 
+% Script to run post-flight Holodec diagnostic routines 
 
 %% Directory/file locations for current flight, edit as needed
 % Hologram directories
@@ -11,8 +11,11 @@ housedir = '/Volumes/Holodec05A/CAESER/20240229_data/';
 % LRT data file (leave empty if unavailable)
 ncfile = '/Users/bansemer/data/caesar/c130/CAESARrf02.nc';
 
+% Optional reference data (earliest diagnostic .mat file available)
+fn_reference = 'RF02_2024-02-29-09-32-00_diagnostics.mat';
+
 %% Compare A and B drives
-if exist(driveA) && exist(driveB)
+if exist(driveA, 'dir') && exist(driveB, 'dir')
     if driveA(end) ~= filesep; driveA = [driveA filesep]; end
     if driveB(end) ~= filesep; driveB = [driveB filesep]; end
     driveAholograms = dir([driveA '**/*.tiff']);
@@ -25,7 +28,8 @@ end
 fn = holoDiagnostics(driveA, 'housedir', housedir, 'ncfile', ncfile);
 
 %% Plot diagnostics
-% Optional reference data (earliest diagnostic .mat file available)
-fn_reference = 'RF02_2024-02-29-09-32-00_diagnostics.mat';
-holoDiagnosticsPlot(fn, fn_reference);
-
+if exist(fn_reference, 'file')
+    holoDiagnosticsPlot(fn, fn_reference);
+else
+    holoDiagnosticsPlot(fn);
+end
