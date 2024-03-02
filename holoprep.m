@@ -144,7 +144,7 @@ function data = holoprep(options)
         seqfilenum=[];
         framenum=[];
 
-        max2process = 50000;  %Set to small value (10?) for testing
+        max2process = 5000000;  %Set to small value (10?) for testing
         if length(imagefiles) > max2process; disp('***ONLY CHECKING A PORTION OF SEQ FILES TO SAVE TIME****'); end;
 
         %Get basic info on the holograms first.  Too complicated for

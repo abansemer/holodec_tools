@@ -1,6 +1,6 @@
 %% Script to run post-flight Holodec diagnostic routines 
 
-%% Directory/file locations for current flight
+%% Directory/file locations for current flight, edit as needed
 % Hologram directories
 driveA = '/Volumes/Holodec05A/CAESER/RF02';
 driveB = '/Volumes/Holodec05B/CAESER/RF02';
