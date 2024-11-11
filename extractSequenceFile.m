@@ -19,7 +19,9 @@ function imFilename = extractSequenceFile(thisSequenceFilePath, frameNum, imageP
    fileInfo.imageLengthBytes  = fread(fid, 1, 'uint32');
    fileInfo.imageFormat       = fread(fid, 1, 'uint32');
 
-   fseek(fid, 580, 'bof'); % Get the spacing between images as they are separated
+   fseek(fid, 580, 'bof');
+
+   % Get the spacing between images as they are separated
    % by the image size + the image footer up to the next
    % sector boundary.
    fileInfo.imageSpacing = fread(fid, 1, 'uint32'); % Called TrueImageSize in the manual
@@ -42,5 +44,4 @@ function imFilename = extractSequenceFile(thisSequenceFilePath, frameNum, imageP
    imwrite(im, imFilename);
 
    fclose(fid);
-
 end

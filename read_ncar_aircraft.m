@@ -1,6 +1,6 @@
 function data=read_ncar_aircraft(ncfile, refvar)
     % Read basic data from Convair netCDF files for the 2021 SPICULE field
-    % campaign or other NCAR GV/C130 campaigns.  Put all relevant data into 
+    % campaign or other NCAR GV/C130 campaigns.  Put all relevant data into
     % a structure.
     %
     % See also holoDianostics_spicule.m and holoprep.m
@@ -9,18 +9,24 @@ function data=read_ncar_aircraft(ncfile, refvar)
         ncfile string
         refvar string = "none"
     end
-    
+
     %Set large time range and return if no aircraft data
     if ~isfile(ncfile)
        data.timerange = [datetime(2000,1,1), datetime(2100,1,1)];
        return
     end
 
+    finfo = ncinfo(ncfile);
+
     %% Get supporting data in netCDF file
+    % Global attribute names sometimes change, need to update conditionals here to avoid Matlab errors
+    globalnames = {finfo.Attributes(:).Name};
     data.flightnumber = upper(ncreadatt(ncfile, '/', 'FlightNumber'));
     data.flightdate = ncreadatt(ncfile, '/', 'FlightDate');
-    data.project = ncreadatt(ncfile, '/', 'ProjectName');
-    data.aircraftname = ncreadatt(ncfile, '/', 'Platform');
+    if max(strcmp(globalnames, 'project')); data.project = ncreadatt(ncfile, '/', 'project'); end
+    if max(strcmp(globalnames, 'ProjectName')); data.project = ncreadatt(ncfile, '/', 'ProjectName'); end
+    if max(strcmp(globalnames, 'Platform')); data.aircraftname = ncreadatt(ncfile, '/', 'Platform'); end
+    if max(strcmp(globalnames, 'platform')); data.aircraftname = ncreadatt(ncfile, '/', 'platform'); end
     data.ncfile = ncfile;
     nctime = ncread(ncfile,'Time');
     tas = ncread(ncfile,'TASX');
@@ -29,9 +35,8 @@ function data=read_ncar_aircraft(ncfile, refvar)
     lat = ncread(ncfile, 'GGLAT');
     lon = ncread(ncfile, 'GGLON');
     alt = ncread(ncfile, 'GGALT');
-   
+
     %Find CDP LWC (PLWCD_XXXX)
-    finfo = ncinfo(ncfile);
     cdplwc = [];
     cdplwc2 = [];   %Some projects have two CDPs on board
     numcdps = 0;
@@ -47,7 +52,7 @@ function data=read_ncar_aircraft(ncfile, refvar)
             numcdps = numcdps + 1;
         end
     end
-    
+
     %Filter where airspeed > 50m/s to avoid long periods on ground
     inflight = find(tas > 50);
     %fulltime = datenum(data.flightdate,'mm/dd/yyyy') + double(nctime)./86400;
@@ -55,7 +60,7 @@ function data=read_ncar_aircraft(ncfile, refvar)
     epochtime = datetime(data.flightdate, 'InputFormat','MM/dd/yyyy');
     fulltime = datetime(nctime, 'ConvertFrom', 'epochtime', 'Epoch', epochtime);
     data.timerange = [min(fulltime(inflight)), max(fulltime(inflight))];
-    
+
     %Add aircraft data to the structure
     data.ncrange = [min(inflight):max(inflight)];
     aircraft.time = fulltime(data.ncrange);
@@ -66,7 +71,7 @@ function data=read_ncar_aircraft(ncfile, refvar)
     aircraft.lat = lat(data.ncrange);
     aircraft.lon = lon(data.ncrange);
     aircraft.alt = alt(data.ncrange);
-    
+
     %Get CDP data
     if length(cdplwc) == length(nctime)   %Have data
         aircraft.cdplwc = cdplwc(data.ncrange);
@@ -91,6 +96,6 @@ function data=read_ncar_aircraft(ncfile, refvar)
             gotrefdata = true;
         end
     end
-    
+
     data.aircraft = aircraft;
 end
