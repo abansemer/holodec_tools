@@ -35,6 +35,7 @@ function data = holoprep(options)
        options.stoptime (1,1) double = 999999.0   %In seconds from midnight
        options.flightid char = ''
        options.outdir char = 'dummyfolder'
+       options.timeoffset {mustBeFloat} = 0       %HOLODEC time correction
     end
 
     %% File management
@@ -83,13 +84,13 @@ function data = holoprep(options)
     if (flightdate(1:4) == "2022")
         %ESCAPE 2022 NRC Convair
         data = read_convair(options.ncfile);
-        refdata = data.aircraft.cdplwc;
+        refdata = data.aircraft.refdata;
         gotref = true;
     else
         %SPICULE 2021 or other GV/C130 project
         data = read_ncar_aircraft(options.ncfile, options.refvar);
         if isfield(data.aircraft, 'refdata')
-            refdata = data.aircraft.cdplwc';
+            refdata = data.aircraft.refdata';
             gotref = true;
         else
             gotref = false;
@@ -200,24 +201,26 @@ function data = holoprep(options)
         
         ngood = 0;  %Keep track of number of good (bright) full holograms
         for i = 1:length(imagefiles)
-            [imagetime, prefix] = holoNameParse(imagefiles(i).name);
+            [imagetime, prefix] = holoNameParse(imagefiles(i).name, options.timeoffset);
             timeindex = max(find(imagetime >= data.aircraft.time));
             if (imagetime > data.timerange(1)) && (imagetime < data.timerange(2)) && (goodtime(timeindex) == 1)
 
                 imageName = [imagefiles(i).folder filesep imagefiles(i).name];
-                fullImage = imread(imageName);
-                brightness = mean(fullImage, 'all');
-
-                % Check if within brightness range 50-200 and write out as png
-                if (brightness > 50) && (brightness < 200)
-                    [tiffPath, baseName] = fileparts(imageName);
-                    %status = copyfile(imageName, options.outdir);
-                    imwrite(fullImage, [options.outdir filesep baseName '.png']);
-
-                    %Concatenate to array for accepted images
-                    data.imagetime = [data.imagetime imagetime];
-                    data.brightness = [data.brightness brightness];
-                    data.filename = [data.filename imageName];
+                [tiffPath, baseName] = fileparts(imageName);
+                newfilename = [options.outdir filesep baseName '.png'];
+                if ~exist(newfilename)  %Skip if already written previously
+                    fullImage = imread(imageName);
+                    brightness = mean(fullImage, 'all');
+    
+                    % Check if within brightness range 50-200 and write out as png
+                    if (brightness > 50) && (brightness < 200)
+                        imwrite(fullImage, newfilename);
+    
+                        %Concatenate to array for accepted images
+                        data.imagetime = [data.imagetime imagetime];
+                        data.brightness = [data.brightness brightness];
+                        data.filename = [data.filename imageName];
+                    end
                 end
             end
 

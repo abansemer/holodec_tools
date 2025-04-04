@@ -160,14 +160,16 @@ function fnout = histmat2nc(options)
         'bin_centers', 'Center value of concentration size bins', 'microns', midbins_dimid;
         'concentration', 'Particle number concentration, normalized by bin width', '#/m4', [conctime_dimid, midbins_dimid];
         'nt', 'Total number concentration', '#/m3', conctime_dimid;
+        'nholograms', 'Number of processed holograms in time period', '#', conctime_dimid;
         'particletime', 'UTC time of individual cloud particles', 'Seconds from midnight of start date', particle_dimid;
         'hid', 'Hologram identification number', 'unitless', particle_dimid;
-        'd', 'Particle diameter', 'microns', particle_dimid;
+        'dmajor', 'Major axis of elliptical fit around particle', 'microns', particle_dimid;
+        'dminor', 'Minor axis of elliptical fit around particle', 'microns', particle_dimid;
         'x', 'Particle x-position (origin at center of hologram)', 'microns', particle_dimid;
         'y', 'Particle y-position (origin at center of hologram)', 'microns', particle_dimid;
         'z', 'Particle z-position (origin at object plane)', 'microns', particle_dimid;
-        'aspr', 'Particle aspect ratio', 'unitless', particle_dimid;
-        'ar', 'Particle area ratio', 'unitless', particle_dimid};
+        'aspectratio', 'Particle aspect ratio (dminor/dmajor from elliptical fit around particle)', 'unitless', particle_dimid;
+        'arearatio', 'Particle area ratio (particle area divided by area of its enclosing circle)', 'unitless', particle_dimid};
     if options.roundruleset ~= 0
         % Add round variables if a ruleset is available
         ncdfprops(end+1:end+4,:) = ...
@@ -221,11 +223,12 @@ function fnout = histmat2nc(options)
     xvarid = netcdf.inqVarID(ncid, 'x');
     yvarid = netcdf.inqVarID(ncid, 'y');
     zvarid = netcdf.inqVarID(ncid, 'z');
-    dvarid = netcdf.inqVarID(ncid, 'd');
+    dmajvarid = netcdf.inqVarID(ncid, 'dmajor');
+    dminvarid = netcdf.inqVarID(ncid, 'dminor');
     particletimevarid = netcdf.inqVarID(ncid, 'particletime');
     hidvarid = netcdf.inqVarID(ncid, 'hid');
-    arvarid = netcdf.inqVarID(ncid, 'ar');
-    asprvarid = netcdf.inqVarID(ncid, 'aspr');
+    arvarid = netcdf.inqVarID(ncid, 'arearatio');
+    asprvarid = netcdf.inqVarID(ncid, 'aspectratio');
 
     %% Read each hist.mat/scalar.mat file and write individual particles to netCDF
     disp('');
@@ -249,9 +252,10 @@ function fnout = histmat2nc(options)
                 netcdf.putVar(ncid, xvarid, offset, NParticles, [pStats.xpos(pStats.good)]*1e6)
                 netcdf.putVar(ncid, yvarid, offset, NParticles, [pStats.ypos(pStats.good)]*1e6)
                 netcdf.putVar(ncid, zvarid, offset, NParticles, [pStats.zpos(pStats.good)]*1e6)
-                netcdf.putVar(ncid, dvarid, offset, NParticles, [pStats.majsiz(pStats.good)]*1e6)
+                netcdf.putVar(ncid, dmajvarid, offset, NParticles, [pStats.majsiz(pStats.good)]*1e6)
+                netcdf.putVar(ncid, dminvarid, offset, NParticles, [pStats.minsiz(pStats.good)]*1e6)
                 netcdf.putVar(ncid, arvarid, offset, NParticles, [pStats.arearatio(pStats.good)])
-                netcdf.putVar(ncid, asprvarid, offset, NParticles, [pStats.asprat(pStats.good)])
+                netcdf.putVar(ncid, asprvarid, offset, NParticles, 1./[pStats.asprat(pStats.good)])
                 netcdf.putVar(ncid, hidvarid, offset, NParticles, zeros(1, NParticles)+i)
                 netcdf.putVar(ncid, particletimevarid, offset, NParticles, zeros(1, NParticles)+imagesfm_full)
             end
@@ -312,6 +316,7 @@ function fnout = histmat2nc(options)
     %% Write concentration and bulk to netCDF
     netcdf.putVar(ncid, netcdf.inqVarID(ncid, 'nt'), bulk.nt)
     netcdf.putVar(ncid, netcdf.inqVarID(ncid, 'concentration'), concnorm)
+    netcdf.putVar(ncid, netcdf.inqVarID(ncid, 'nholograms'), nholograms)
     if options.roundruleset ~= 0
         bulkround = compute_bulk_simple(concroundnorm, endbins);
         netcdf.putVar(ncid, netcdf.inqVarID(ncid, 'lwc_round'), bulkround.lwc)
